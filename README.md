@@ -41,6 +41,29 @@ itself is not perfectly stable (it comes from the camera, or from the last posit
 if the game does not let a script read the camera), and a grid that reacts to every small change of
 it flickers. With the hysteresis the grid stays where it is until it really has to move.
 
+## The two contexts
+
+A game script runs twice: once in the context that runs the simulation and writes the savegame, and
+once in the context that owns the user interface and draws. The mod settings live in the second one,
+which is why they are sent to the first one with a script event whenever they change.
+
+The way back is `save` and `load`, and it is the part that is easy to get wrong: the game does not
+only call them when a savegame is written or read, it uses them to hand the state of the simulation
+to the drawing context **in every frame**. For that context `load` is not "a game was loaded", it is
+a state update that never stops arriving. Anything it does has to be cheap and, above all, must
+leave what is on screen alone — a `load` that removes the grid and lets the update loop build it
+again a few frames later makes the grid flicker rather than stand still. The same applies to the
+settings: a state update still describes the previous choice for the few frames a change of the
+popup needs to travel to the other context, so the mod ignores those updates until its own change
+has come back.
+
+The grid is therefore only ever thrown away for a reason the mod can see, and it is never
+recovered by clearing: writing a zone that is already there with the very same value cannot be
+seen, while removing it and adding it again can. Should the game ever drop what the mod drew (it
+does that when a savegame is loaded, which also rebuilds the game menu and is how the mod notices),
+every zone is simply written again. On top of that the mod rewrites all of its zones every few
+seconds as a safety net.
+
 ## Performance
 
 * The grid covers a fixed number of cells around the camera instead of the whole map. The number of
@@ -107,3 +130,9 @@ The tests cover the geometry of the grid, the button and the popup, every settin
 cycle including states written by older versions of the mod, the fallback that is used when the
 camera cannot be read, and the case in which the game rebuilds its user interface while the mod is
 running. The `test` directory is ignored by the game.
+
+Both contexts of the game script are run side by side and the state is handed from one to the other
+in every frame, exactly as the game does it, since that is what tells whether the grid really stands
+still. The tests count how many zones are on the map after every single one of those frames: a grid
+that is taken off the map and drawn again is a grid that flickers, no matter how it looks at the end
+of a test.

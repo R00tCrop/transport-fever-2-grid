@@ -217,6 +217,22 @@ function harness.leaveGuiContext()
   api.gui = nil
 end
 
+-- calls a function as the context that runs the simulation, which is how the
+-- two contexts of one game script can be simulated side by side
+function harness.inGameContext(fn, ...)
+  local gameGui, apiGui = game.gui, api.gui
+
+  game.gui, api.gui = nil, nil
+
+  local ok, result = pcall(fn, ...)
+
+  game.gui, api.gui = gameGui, apiGui
+
+  if not ok then error(result, 0) end
+
+  return result
+end
+
 -- forgets every module of the mod, which is what starting the game again does
 function harness.freshSession()
   for name in pairs(package.loaded) do

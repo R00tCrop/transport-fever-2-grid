@@ -40,6 +40,63 @@ local function start(params)
   return script
 end
 
+-- the game does not only call save and load when a savegame is written or read:
+-- it also uses them to hand the state of the context that runs the simulation to
+-- the context that draws, and it does that while the game is running. the setup
+-- below therefore runs both contexts of the game script side by side and hands
+-- the state over in every frame, which is what a running game really does
+--
+-- the events the user interface sends travel the other way and need a moment to
+-- arrive, so the state that comes back is older than what the player just chose
+local EVENT_LATENCY = 10
+
+local function newGame(params)
+  harness.reset()
+  harness.freshSession()
+  harness.setCameraAvailable(true)
+  harness.loadMod(params)
+
+  local running = {
+    gui = harness.loadGameScript(),
+    sim = harness.inGameContext(harness.loadGameScript),
+    frame = 0,
+    delivered = 0,
+  }
+
+  harness.inGameContext(running.sim.load, nil, false)
+  running.gui.load(nil, false)
+  running.gui.guiInit()
+
+  return running
+end
+
+local function tick(running, count)
+  for _ = 1, (count or 1) do
+    running.frame = running.frame + 1
+
+    while running.delivered < #harness.events do
+      local event = harness.events[running.delivered + 1]
+
+      event.frame = event.frame or running.frame
+
+      if running.frame - event.frame < EVENT_LATENCY then break end
+
+      running.delivered = running.delivered + 1
+      harness.inGameContext(running.sim.handleEvent, 'gui', event.id, event.name, event.param)
+    end
+
+    running.gui.load(harness.inGameContext(running.sim.save), false)
+    running.gui.guiUpdate()
+  end
+end
+
+local function rebuildUserInterface()
+  harness.components = {}
+  harness.layouts = { mainButtonsLayout = { id = 'mainButtonsLayout', items = {}, owner = 'mainButtonsLayout' } }
+  harness.components['mainButtonsLayout'] = { id = 'mainButtonsLayout', type = 'Component', classes = {} }
+  harness.windows = {}
+end
+
 ------------------------------------------------------------------------------
 section('the mod parameters define the defaults')
 
@@ -233,6 +290,77 @@ check(harness.countZones() == 34, 'the grid of the loaded game is drawn')
 harness.click(loaded, 'gridOverlay.button')
 frames(loaded, 6)
 check(harness.countZones() == 0, 'the button of the loaded game works')
+
+------------------------------------------------------------------------------
+section('the grid stands still while the game hands its state over')
+
+local running = newGame({})
+harness.click(running.gui, 'gridOverlay.button')
+tick(running, 12)
+check(harness.countZones() == 34, 'the grid is drawn')
+
+-- the state of the simulation arrives in the context that draws in every single
+-- frame; a mod that treats every one of them as a freshly loaded game removes
+-- its grid and builds it again a few frames later, which is what made the grid
+-- flicker
+local written, removed = harness.stats.setZone, harness.stats.removeZone
+local lowest = harness.countZones()
+
+for _ = 1, 120 do
+  tick(running, 1)
+  lowest = math.min(lowest, harness.countZones())
+end
+
+check(lowest == 34, 'no state update ever takes a line off the map')
+check(harness.stats.removeZone == removed, 'nothing is removed while the state is handed over')
+check(harness.stats.setZone == written, 'nothing is written again while nothing changes')
+
+------------------------------------------------------------------------------
+section('a choice from the popup survives the state that is still on its way')
+
+running = newGame({})
+harness.click(running.gui, 'gridOverlay.button')
+tick(running, 12)
+check(harness.countZones() == 34, 'the grid starts with a cell size of 100 m')
+
+-- the state of the simulation still describes the previous cell size until the
+-- event of the popup has arrived there; adopting it would let the grid fall
+-- back to the old look for a moment
+harness.click(running.gui, 'gridOverlay.option.cell.4')
+tick(running, 6)
+check(harness.countZones() == 18, 'the chosen cell size of 200 m is drawn right away')
+
+local everWrong = false
+
+for _ = 1, 40 do
+  tick(running, 1)
+  everWrong = everWrong or harness.countZones() ~= 18
+end
+
+check(not everWrong, 'the grid never falls back to the previous cell size')
+check(harness.inGameContext(running.sim.save).cellSize == 200, 'the savegame ends up with the chosen cell size')
+
+------------------------------------------------------------------------------
+section('the grid comes back when the game drops what the mod drew')
+
+running = newGame({})
+harness.click(running.gui, 'gridOverlay.button')
+tick(running, 12)
+check(harness.countZones() == 34, 'the grid is drawn')
+
+-- loading a savegame rebuilds the user interface of the game and takes the
+-- zones of the game that was played before with it
+harness.zones = {}
+rebuildUserInterface()
+tick(running, 12)
+
+check(harness.components['gridOverlay.button'] ~= nil, 'the button is created again')
+check(harness.countZones() == 34, 'the grid is written again')
+
+-- and even without any of that the mod writes its zones again from time to time
+harness.zones = {}
+tick(running, 300)
+check(harness.countZones() == 34, 'a grid that got lost silently comes back on its own')
 
 ------------------------------------------------------------------------------
 section('the context that runs the simulation has no user interface')

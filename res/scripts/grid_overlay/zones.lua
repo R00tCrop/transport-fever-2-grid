@@ -13,7 +13,7 @@ painter.__index = painter
 -- prefix keeps the keys of this mod separate from the keys used by missions and
 -- by other mods
 function zones.createPainter(prefix)
-  return setmetatable({ prefix = prefix, applied = {} }, painter)
+  return setmetatable({ prefix = prefix, applied = {}, stale = false }, painter)
 end
 
 local function setZone(key, zone)
@@ -55,6 +55,7 @@ end
 -- shapes: array of { key = string, polygon = { { x, y }, ... }, color = { r, g, b, a } }
 function painter:apply(shapes)
   local applied = self.applied
+  local isStale = self.stale
   local next_ = {}
 
   for i = 1, #shapes do
@@ -63,7 +64,7 @@ function painter:apply(shapes)
 
     next_[key] = shape
 
-    if not isUnchanged(applied[key], shape) then
+    if isStale or not isUnchanged(applied[key], shape) then
       setZone(key, { polygon = shape.polygon, draw = true, drawColor = shape.color })
     end
   end
@@ -73,9 +74,28 @@ function painter:apply(shapes)
   end
 
   self.applied = next_
+  self.stale = false
+end
+
+-- forgets what the painter believes is on screen without removing anything, so
+-- that the next apply writes every zone again
+--
+-- this is the only way to recover from a game that dropped what the mod drew
+-- (loading a savegame does exactly that). it must never be done by clearing:
+-- removing the zones and adding them again one frame later is precisely what
+-- makes the grid flicker, while writing a zone that is already there with the
+-- very same value cannot be seen at all.
+function painter:markStale()
+  self.stale = true
+end
+
+function painter:isStale()
+  return self.stale
 end
 
 function painter:clear()
+  self.stale = false
+
   if next(self.applied) == nil then return end
 
   for key in pairs(self.applied) do
