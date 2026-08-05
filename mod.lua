@@ -39,7 +39,7 @@ function data()
       tags = { 'Script Mod', 'Misc' },
       authors = {
         {
-          name = 'MrWolfZ',
+          name = 'MicroBrain',
           role = 'CREATOR',
         },
       },
