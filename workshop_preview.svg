@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- workshop_preview: the grid the mod draws, with every fifth line emphasised -->
+<svg xmlns="http://www.w3.org/2000/svg" width="666" height="666" viewBox="0 0 666 666">
+  <rect width="666" height="666" fill="#262729"/>
+  <g fill="#ffffff">
+    <rect x="194.61" y="54.75" width="10.39" height="276.79"/>
+    <rect x="194.61" y="54.75" width="276.79" height="10.39"/>
+    <rect x="242.47" y="54.75" width="3.46" height="276.79"/>
+    <rect x="194.61" y="102.61" width="276.79" height="3.46"/>
+    <rect x="286.87" y="54.75" width="3.46" height="276.79"/>
+    <rect x="194.61" y="147.01" width="276.79" height="3.46"/>
+    <rect x="327.81" y="54.75" width="10.39" height="276.79"/>
+    <rect x="194.61" y="187.95" width="276.79" height="10.39"/>
+    <rect x="375.67" y="54.75" width="3.46" height="276.79"/>
+    <rect x="194.61" y="235.81" width="276.79" height="3.46"/>
+    <rect x="420.07" y="54.75" width="3.46" height="276.79"/>
+    <rect x="194.61" y="280.21" width="276.79" height="3.46"/>
+    <rect x="461.01" y="54.75" width="10.39" height="276.79"/>
+    <rect x="194.61" y="321.15" width="276.79" height="10.39"/>
+    <rect x="0.00" y="356.31" width="666.00" height="9.99"/>
+  </g>
+  <text x="333.0" y="572.5" fill="#ffffff" text-anchor="middle"
+        font-family="DejaVu Serif, Georgia, serif" font-weight="bold" font-size="156.5">Grid</text>
+</svg>

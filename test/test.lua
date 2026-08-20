@@ -16,6 +16,14 @@ local function section(name)
   print('\n== ' .. name)
 end
 
+-- the grid a new game starts with: 100 m cells over a radius of 2000 m, which
+-- is one line every 100 m from -2000 m to 2000 m on both axes
+local DEFAULT_LINES = 41
+local DEFAULT_ZONES = DEFAULT_LINES * 2
+
+-- how far the point the grid follows may move before the grid is recentred
+local HYSTERESIS = 2000 * 0.35
+
 local function countKeys(t)
   local count = 0
   for _ in pairs(t) do count = count + 1 end
@@ -107,10 +115,23 @@ check(game.config.gridOverlay.defaults.majorEvery == 5, 'every fifth line is emp
 check(game.config.gridOverlay.defaults.enabled == false, 'the grid starts switched off')
 
 harness.reset()
-harness.loadMod({ gridCellSize = 0, gridPalette = 2, gridOpacity = 4 })
-check(game.config.gridOverlay.defaults.cellSize == 25, 'a chosen cell size is picked up')
+harness.loadMod({ gridCellSize = 0, gridPalette = 2, gridOpacity = 3 })
+check(game.config.gridOverlay.defaults.cellSize == 50, 'a chosen cell size is picked up')
 check(game.config.gridOverlay.defaults.palette == 'amber', 'a chosen colour is picked up')
 check(game.config.gridOverlay.defaults.opacity == 1.0, 'a chosen opacity is picked up')
+
+-- the option the game offers as the default and the value the mod falls back to
+-- when the game hands no index over have to be the same value
+harness.reset()
+local declared = harness.loadMod({}).info.params
+harness.reset()
+harness.loadMod({})
+
+for i = 1, #declared do
+  local param = declared[i]
+  check(param.defaultIndex ~= nil and param.values[param.defaultIndex + 1] ~= nil,
+    'the option "' .. param.key .. '" has a default the game can show')
+end
 
 ------------------------------------------------------------------------------
 section('the button is added to the bar of the game')
@@ -141,12 +162,11 @@ frames(script, 6)
 
 check(harness.windows['gridOverlay.window'] ~= nil, 'the settings popup opens with the grid')
 
--- a radius of 800 m with a cell size of 100 m is the same as 17 lines per axis
-check(harness.countZones() == 34, 'the grid consists of 17 lines per axis')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid consists of ' .. DEFAULT_LINES .. ' lines per axis')
 
 local vertical = harness.zonesWithPrefix('gridOverlay.v')
 local horizontal = harness.zonesWithPrefix('gridOverlay.h')
-check(countKeys(vertical) == 17 and countKeys(horizontal) == 17, 'both axes are drawn')
+check(countKeys(vertical) == DEFAULT_LINES and countKeys(horizontal) == DEFAULT_LINES, 'both axes are drawn')
 
 local sample = harness.zones['gridOverlay.v1']
 check(sample ~= nil and #sample.polygon == 4, 'a line is a rectangle with four corners')
@@ -192,22 +212,27 @@ for i = 1, 20 do
 end
 check(harness.stats.setZone == drawn, 'a position that jumps around does not make the grid flicker')
 
-harness.camera = { 400, 0 }
+harness.camera = { HYSTERESIS + 100, 0 }
 frames(script, 12)
 check(harness.stats.setZone > drawn, 'the grid is recentred once the camera moved far enough')
-check(harness.stats.setZone - drawn <= 22, 'recentring only writes the lines that really moved')
-check(harness.zones['gridOverlay.v12'] ~= nil and harness.zones['gridOverlay.v-8'] == nil,
+
+-- the camera moved eight cells along x, so eight vertical lines came into the
+-- covered area and eight left it; the lines that cross them now end somewhere
+-- else and have to be written again, the 33 vertical lines that stayed are left
+-- untouched
+check(harness.stats.setZone - drawn == DEFAULT_LINES + 8, 'recentring only writes the lines that really changed')
+check(harness.zones['gridOverlay.v28'] ~= nil and harness.zones['gridOverlay.v-13'] == nil,
   'the covered area moved with the camera')
-check(harness.countZones() == 34, 'the number of drawn lines stays the same')
+check(harness.countZones() == DEFAULT_ZONES, 'the number of drawn lines stays the same')
 
 drawn = harness.stats.setZone
-harness.camera = { 400, 400 }
+harness.camera = { HYSTERESIS + 100, HYSTERESIS + 100 }
 frames(script, 12)
-check(harness.stats.setZone - drawn <= 22, 'recentring on the other axis only touches the lines of that axis')
+check(harness.stats.setZone - drawn == DEFAULT_LINES + 8, 'recentring on the other axis costs the same')
 
 harness.camera = { 4000, -2500 }
 frames(script, 12)
-check(harness.countZones() == 34, 'the grid still consists of 17 lines per axis far away from the origin')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid still consists of ' .. DEFAULT_LINES .. ' lines per axis far away from the origin')
 local far = harness.zones['gridOverlay.v40']
 check(far ~= nil, 'the lines are still aligned to the world origin')
 
@@ -218,15 +243,16 @@ script = start({})
 harness.click(script, 'gridOverlay.button')
 frames(script, 6)
 
--- the third option of the first group is a cell size of 100 m, the fourth 200 m
-check(harness.zones['gridOverlay.v8'] ~= nil and harness.zones['gridOverlay.v9'] == nil,
-  'the grid covers the chosen radius of 800 m')
+-- 20 cells of 100 m to each side of the origin is the covered radius of 2000 m
+check(harness.zones['gridOverlay.v20'] ~= nil and harness.zones['gridOverlay.v21'] == nil,
+  'the grid covers the chosen radius of 2000 m')
 
+-- the fourth option of the first group is a cell size of 400 m
 harness.click(script, 'gridOverlay.option.cell.4')
 frames(script, 6)
-check(harness.zones['gridOverlay.v4'] ~= nil and harness.zones['gridOverlay.v5'] == nil,
+check(harness.zones['gridOverlay.v5'] ~= nil and harness.zones['gridOverlay.v6'] == nil,
   'a larger cell size covers the very same area')
-check(harness.countZones() == 18, 'a larger cell size only needs fewer lines for it')
+check(harness.countZones() == 22, 'a larger cell size only needs fewer lines for it')
 
 local classes = harness.components['gridOverlay.option.cell.4'].classes
 check(classes[2] == 'ug-grid-option-active', 'the chosen option is marked')
@@ -247,22 +273,29 @@ check(first.drawColor[4] == second.drawColor[4], 'the emphasis can be switched o
 section('the settings are stored in the savegame')
 
 local saved = script.save()
-check(saved.cellSize == 200 and saved.palette == 'amber' and saved.majorEvery == 0, 'the state contains the chosen settings')
+check(saved.cellSize == 400 and saved.palette == 'amber' and saved.majorEvery == 0, 'the state contains the chosen settings')
 check(saved.enabled == true, 'the state remembers that the grid is switched on')
 
 local sent = harness.events[#harness.events]
-check(sent ~= nil and sent.param.cellSize == 200, 'the settings are handed to the context that writes the savegame')
+check(sent ~= nil and sent.param.cellSize == 400, 'the settings are handed to the context that writes the savegame')
 
 script = start({})
-script.load({ version = 2, enabled = true, cellSize = 50, opacity = 0.75, lineWidth = 5.0, majorEvery = 10, radius = 400, palette = 'green' }, false)
+script.load({ version = 2, enabled = true, cellSize = 200, opacity = 0.75, lineWidth = 2.0, majorEvery = 10, radius = 1000, palette = 'green' }, false)
 frames(script, 6)
-check(harness.countZones() == 2 * 17, 'a loaded state is used right away')
+check(harness.countZones() == 22, 'a loaded state is used right away')
 check(harness.zones['gridOverlay.v0'].drawColor[2] == 0.85, 'a loaded colour is used')
+
+-- a state written by a version of the mod that offered other values; every one
+-- of them falls back to the default of this version instead of being used
+script = start({})
+script.load({ version = 1, enabled = true, cellSize = 25, opacity = 0.55, lineWidth = 5.0, radius = 800, palette = 'pink' }, false)
+frames(script, 6)
+check(harness.countZones() == DEFAULT_ZONES, 'values an older version offered fall back to the defaults')
 
 script = start({})
 script.load({ version = 2, enabled = true, cellSize = 'nonsense', palette = 'pink' }, false)
 frames(script, 6)
-check(harness.countZones() == 34, 'a broken state falls back to the defaults')
+check(harness.countZones() == DEFAULT_ZONES, 'a broken state falls back to the defaults')
 
 ------------------------------------------------------------------------------
 section('loading a savegame while the game is running')
@@ -270,7 +303,7 @@ section('loading a savegame while the game is running')
 script = start({})
 harness.click(script, 'gridOverlay.button')
 frames(script, 6)
-check(harness.countZones() == 34, 'the grid is drawn')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid is drawn')
 
 -- the game rebuilds its whole user interface for the loaded game and drops
 -- everything a mod added to it
@@ -278,13 +311,13 @@ rebuildUserInterface()
 harness.zones = {}
 
 local loaded = harness.loadGameScript()
-loaded.load({ version = 2, enabled = true, cellSize = 100, opacity = 0.55, lineWidth = 3.0, majorEvery = 5, radius = 800, palette = 'blue' }, false)
+loaded.load({ version = 2, enabled = true, cellSize = 100, opacity = 0.75, lineWidth = 3.0, majorEvery = 5, radius = 2000, palette = 'blue' }, false)
 loaded.guiInit()
 frames(loaded, 6)
 
 check(harness.components['gridOverlay.button'] ~= nil, 'the button is created again')
 check(harness.gameBar()[#harness.gameBar()] == 'gridOverlay.button', 'the button is attached again')
-check(harness.countZones() == 34, 'the grid of the loaded game is drawn')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid of the loaded game is drawn')
 
 harness.click(loaded, 'gridOverlay.button')
 frames(loaded, 6)
@@ -296,7 +329,7 @@ section('the grid stands still while the game hands its state over')
 local running = newGame({})
 harness.click(running.gui, 'gridOverlay.button')
 tick(running, 12)
-check(harness.countZones() == 34, 'the grid is drawn')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid is drawn')
 
 -- the state of the simulation arrives in the context that draws in every single
 -- frame; a mod that treats every one of them as a freshly loaded game removes
@@ -310,7 +343,7 @@ for _ = 1, 120 do
   lowest = math.min(lowest, harness.countZones())
 end
 
-check(lowest == 34, 'no state update ever takes a line off the map')
+check(lowest == DEFAULT_ZONES, 'no state update ever takes a line off the map')
 check(harness.stats.removeZone == removed, 'nothing is removed while the state is handed over')
 check(harness.stats.setZone == written, 'nothing is written again while nothing changes')
 
@@ -320,24 +353,24 @@ section('a choice from the popup survives the state that is still on its way')
 running = newGame({})
 harness.click(running.gui, 'gridOverlay.button')
 tick(running, 12)
-check(harness.countZones() == 34, 'the grid starts with a cell size of 100 m')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid starts with a cell size of 100 m')
 
 -- the state of the simulation still describes the previous cell size until the
 -- event of the popup has arrived there; adopting it would let the grid fall
 -- back to the old look for a moment
 harness.click(running.gui, 'gridOverlay.option.cell.4')
 tick(running, 6)
-check(harness.countZones() == 18, 'the chosen cell size of 200 m is drawn right away')
+check(harness.countZones() == 22, 'the chosen cell size of 400 m is drawn right away')
 
 local everWrong = false
 
 for _ = 1, 40 do
   tick(running, 1)
-  everWrong = everWrong or harness.countZones() ~= 18
+  everWrong = everWrong or harness.countZones() ~= 22
 end
 
 check(not everWrong, 'the grid never falls back to the previous cell size')
-check(harness.inGameContext(running.sim.save).cellSize == 200, 'the savegame ends up with the chosen cell size')
+check(harness.inGameContext(running.sim.save).cellSize == 400, 'the savegame ends up with the chosen cell size')
 
 ------------------------------------------------------------------------------
 section('the grid comes back when the game drops what the mod drew')
@@ -345,7 +378,7 @@ section('the grid comes back when the game drops what the mod drew')
 running = newGame({})
 harness.click(running.gui, 'gridOverlay.button')
 tick(running, 12)
-check(harness.countZones() == 34, 'the grid is drawn')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid is drawn')
 
 -- loading a savegame rebuilds the user interface of the game and takes the
 -- zones of the game that was played before with it
@@ -354,12 +387,12 @@ rebuildUserInterface()
 tick(running, 12)
 
 check(harness.components['gridOverlay.button'] ~= nil, 'the button is created again')
-check(harness.countZones() == 34, 'the grid is written again')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid is written again')
 
 -- and even without any of that the mod writes its zones again from time to time
 harness.zones = {}
 tick(running, 300)
-check(harness.countZones() == 34, 'a grid that got lost silently comes back on its own')
+check(harness.countZones() == DEFAULT_ZONES, 'a grid that got lost silently comes back on its own')
 
 ------------------------------------------------------------------------------
 section('the context that runs the simulation has no user interface')
@@ -398,7 +431,7 @@ harness.entities[7] = { position = { 1000, -1000, 30 } }
 
 harness.click(script, 'gridOverlay.button')
 frames(script, 6)
-check(harness.countZones() == 34, 'the grid is drawn around the origin')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid is drawn around the origin')
 
 script.guiHandleEvent('mainView', 'hover', 7)
 frames(script, 40)
@@ -414,7 +447,7 @@ game.gui.window_create = function () error('no windows today') end
 
 check(pcall(harness.click, script, 'gridOverlay.button'), 'clicking the button does not throw')
 frames(script, 6)
-check(harness.countZones() == 34, 'the grid is drawn even without the popup')
+check(harness.countZones() == DEFAULT_ZONES, 'the grid is drawn even without the popup')
 
 game.gui.window_create = createWindow
 
@@ -492,6 +525,91 @@ harness.gameGui.button_create = buttonCreate
 check(harness.components['gridOverlay.button'] == nil, 'the button really is not there')
 check(creations == afterAWhile, 'the mod gives up instead of creating a button in every frame')
 check(afterAWhile <= 25, 'it gives up after a few attempts, not after hundreds')
+
+------------------------------------------------------------------------------
+section('every text of the mod is translated into every language of the game')
+
+-- the languages the game ships with; a mod that lists a language the game does
+-- not have is dead weight, one that misses a language falls back to english
+local LANGUAGES = {
+  'en', 'de', 'es', 'fr', 'it', 'ja', 'ko', 'nl', 'pl', 'pt_BR', 'ru', 'zh_CN', 'zh_TW',
+}
+
+local strings = harness.loadStrings()
+local translated = harness.translatedStrings()
+
+local missingLanguages = {}
+
+for i = 1, #LANGUAGES do
+  if strings[LANGUAGES[i]] == nil then missingLanguages[#missingLanguages + 1] = LANGUAGES[i] end
+end
+
+check(#missingLanguages == 0, 'every language of the game is covered: ' .. table.concat(missingLanguages, ', '))
+
+local extraLanguages = {}
+
+for language in pairs(strings) do
+  local isKnown = false
+
+  for i = 1, #LANGUAGES do
+    if LANGUAGES[i] == language then isKnown = true end
+  end
+
+  if not isKnown then extraLanguages[#extraLanguages + 1] = language end
+end
+
+check(#extraLanguages == 0, 'no language the game does not have: ' .. table.concat(extraLanguages, ', '))
+
+local missingKeys, orphanKeys = {}, {}
+
+for i = 1, #LANGUAGES do
+  local language = LANGUAGES[i]
+  local texts = strings[language] or {}
+
+  for key in pairs(translated) do
+    if texts[key] == nil or texts[key] == '' then
+      missingKeys[#missingKeys + 1] = language .. '/' .. key
+    end
+  end
+
+  for key in pairs(texts) do
+    if translated[key] == nil then orphanKeys[#orphanKeys + 1] = language .. '/' .. key end
+  end
+end
+
+check(#missingKeys == 0, 'every string the mod translates is present in every language ('
+  .. (missingKeys[1] or 'none missing') .. ')')
+check(#orphanKeys == 0, 'no text is left over from a string the mod no longer uses ('
+  .. (orphanKeys[1] or 'none left over') .. ')')
+
+-- a translation that is simply a copy of the english text is usually a
+-- translation that was forgotten; the entries below are the handful of words
+-- that really do read the same in those languages, and the mod name is allowed
+-- to stay english everywhere
+local READS_THE_SAME = {
+  ['de/Debug'] = true, ['de/Normal'] = true,
+  ['es/Normal'] = true,
+  ['it/Debug'] = true,
+  ['nl/Amber'] = true, ['nl/Debug'] = true,
+  ['pt_BR/Normal'] = true,
+}
+
+local untranslated = {}
+
+for i = 2, #LANGUAGES do
+  local language = LANGUAGES[i]
+
+  for key, text in pairs(strings[language] or {}) do
+    local id = language .. '/' .. key
+
+    if key ~= 'Name' and text == strings.en[key] and not READS_THE_SAME[id] then
+      untranslated[#untranslated + 1] = id
+    end
+  end
+end
+
+check(#untranslated == 0, 'no language still shows the english text ('
+  .. (untranslated[1] or 'none') .. ')')
 
 ------------------------------------------------------------------------------
 print('')

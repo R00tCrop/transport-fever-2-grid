@@ -288,6 +288,52 @@ function harness.loadMod(params)
   return mod
 end
 
+-- the texts of the mod in every language, and every string the mod actually
+-- asks the game to translate; both are needed to tell whether a translation is
+-- missing or left over
+function harness.loadStrings()
+  local chunk = assert(loadfile(MOD .. '/strings.lua'))
+  chunk()
+
+  return data()
+end
+
+-- the purely numeric labels (50 m, 25%, ...) read the same in every language and
+-- are deliberately not part of strings.lua
+local function isNumericLabel(text)
+  return text:match('^[%d%s]+m$') ~= nil or text:match('^[%d%s]+%%$') ~= nil
+end
+
+function harness.translatedStrings()
+  local sources = {
+    MOD .. '/mod.lua',
+    MOD .. '/res/config/game_script/grid_overlay.lua',
+  }
+
+  for _, name in ipairs({ 'anchor', 'config', 'debugpanel', 'geometry', 'logging', 'menu', 'zones' }) do
+    sources[#sources + 1] = MOD .. '/res/scripts/grid_overlay/' .. name .. '.lua'
+  end
+
+  local found = {}
+
+  for i = 1, #sources do
+    local file = assert(io.open(sources[i], 'r'))
+    local text = file:read('*a')
+    file:close()
+
+    for literal in text:gmatch("_%('([^']*)'%)") do
+      if not isNumericLabel(literal) then found[literal] = true end
+    end
+  end
+
+  -- the name and the description are not passed as literals, they are the two
+  -- keys the game itself looks up in the info of the mod
+  found['Name'] = true
+  found['Description'] = true
+
+  return found
+end
+
 function harness.loadGameScript()
   local chunk = assert(loadfile(MOD .. '/res/config/game_script/grid_overlay.lua'))
   chunk()

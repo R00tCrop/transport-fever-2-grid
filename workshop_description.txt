@@ -1,0 +1,49 @@
+[h1]Grid[/h1]
+
+Draws a measuring grid onto the terrain and adds a "Grid" button to the bar at the bottom of the screen, next to the buttons of the other script mods.
+
+The grid makes it much easier to plan a town, to keep buildings and streets aligned and to estimate distances without having to place a street first. Every n-th line is drawn wider and brighter, so cells can be counted at a glance.
+
+[h1]How it works[/h1]
+
+[list]
+[*]The button switches the grid on and off and opens a small window with all settings.
+[*]The grid is drawn around the camera instead of covering the whole map, so the number of lines stays the same no matter how large the map is.
+[*]The lines are aligned to the world origin, so they never move while the camera is panning. They only appear and disappear at the border of the covered area.
+[*]The grid follows the terrain, so it works on slopes as well.
+[*]All settings are stored in the savegame, so every game keeps its own grid.
+[/list]
+
+[h1]Settings[/h1]
+
+Everything can be set as a starting value in the mod parameters and changed at any time while playing:
+
+[list]
+[*][b]Cell size[/b] - 50, 100, 200, 400 or 800 m
+[*][b]Colour[/b] - blue, white, amber or green
+[*][b]Opacity[/b] - 25%, 50%, 75% or 100%
+[*][b]Line width[/b] - thin, normal or bold
+[*][b]Emphasised lines[/b] - off, every 5th or every 10th line
+[*][b]Covered radius[/b] - 1000, 2000 or 4000 m
+[/list]
+
+[h1]Performance[/h1]
+
+The mod itself costs nothing measurable: it does about 0.01 % of one frame of work at 60 fps. What costs frames is the engine drawing the lines onto the terrain, so the cell size and the covered radius are the two settings that matter. With the defaults the grid is 82 lines. A larger cell size or a smaller radius makes it noticeably cheaper.
+
+[h1]Compatibility[/h1]
+
+The mod is purely visual and does not touch the simulation. It can be added to and removed from an existing savegame at any time, and it does not conflict with other mods that add a button to the bottom bar.
+
+Available in all 13 languages the game ships with.
+
+[h1]Source and licence[/h1]
+
+Source code: [url=https://github.com/R00tCrop/transport-fever-2-grid]github.com/R00tCrop/transport-fever-2-grid[/url]
+Licence: MIT - free to use, modify and redistribute, as long as the copyright notice and the licence text are kept.
+
+Bug reports and suggestions are welcome in the comments or as an issue on GitHub.
+
+[h1]Credits[/h1]
+
+Written with Claude Opus 5 by Anthropic.

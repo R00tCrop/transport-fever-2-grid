@@ -57,7 +57,9 @@ config.MINOR_ALPHA_FACTOR = 0.55
 
 config.LOG_LEVELS = { 'OFF', 'ERROR', 'DEBUG' }
 
-local BUILT_IN_DEFAULTS = {
+-- what a game starts with when the mod parameters do not say otherwise; the
+-- mod parameters read this too, so the defaults exist exactly once
+config.DEFAULTS = {
   enabled = false,
   cellSize = 100,
   opacity = 0.75,
@@ -77,7 +79,7 @@ local function isOneOf(values, value)
 end
 
 -- the mod parameters are written to game.config by the runFn of the mod; they
--- are not available in every context, in which case the built in defaults are
+-- are not available in every context, in which case the defaults above are
 -- used instead
 local function readModDefaults()
   local ok, defaults = pcall(function ()
@@ -91,7 +93,7 @@ function config.createSettings()
   local defaults = readModDefaults()
   local settings = {}
 
-  for key, value in pairs(BUILT_IN_DEFAULTS) do
+  for key, value in pairs(config.DEFAULTS) do
     settings[key] = value
   end
 
@@ -107,7 +109,7 @@ end
 function config.normalize(settings)
   local normalized = {}
 
-  for key, value in pairs(BUILT_IN_DEFAULTS) do
+  for key, value in pairs(config.DEFAULTS) do
     normalized[key] = value
   end
 
@@ -148,7 +150,7 @@ function config.copySettings(settings)
 end
 
 function config.areEqual(a, b)
-  for key in pairs(BUILT_IN_DEFAULTS) do
+  for key in pairs(config.DEFAULTS) do
     if a[key] ~= b[key] then return false end
   end
 
