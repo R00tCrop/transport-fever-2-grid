@@ -41,6 +41,27 @@ itself is not perfectly stable (it comes from the camera, or from the last posit
 if the game does not let a script read the camera), and a grid that reacts to every small change of
 it flickers. With the hysteresis the grid stays where it is until it really has to move.
 
+## The button in the game menu
+
+The button is appended to the group of main buttons that ends with the bulldozer, which is where the
+buttons of mods belong:
+
+```lua
+api.gui.util.getById('mainButtonsLayout'):getItem(2):addItem(button)
+```
+
+Nothing about this is a fixed position. The button is not placed at coordinates and it is not hung
+next to a particular button of the game — it is simply appended to a box layout, which lays its
+items out one after the other. Several mods that do this therefore line up next to each other in the
+order they happen to be loaded, and none of them has to know how many others are installed. It is
+the same three lines the other mods of the game use, so the row stays correct in either direction.
+
+The button carries the disk of the game behind it (the same images and colours the game uses for
+`BulldozerButton` and `ConstructionMenuIndicator`) and the icon is as large as the icons of its
+neighbours, so it cannot be told apart from the buttons the game adds itself. While the grid is
+drawn, the surface of the disk is coloured with the accent colour, which is how the game marks a
+button that is switched on.
+
 ## The two contexts
 
 A game script runs twice: once in the context that runs the simulation and writes the savegame, and

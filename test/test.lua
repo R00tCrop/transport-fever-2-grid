@@ -92,9 +92,9 @@ end
 
 local function rebuildUserInterface()
   harness.components = {}
-  harness.layouts = { mainButtonsLayout = { id = 'mainButtonsLayout', items = {}, owner = 'mainButtonsLayout' } }
-  harness.components['mainButtonsLayout'] = { id = 'mainButtonsLayout', type = 'Component', classes = {} }
+  harness.layouts = {}
   harness.windows = {}
+  harness.createGameMenu()
 end
 
 ------------------------------------------------------------------------------
@@ -120,8 +120,8 @@ local script = start({})
 check(harness.components['gridOverlay.button'] ~= nil, 'the button exists')
 check(harness.components['gridOverlay.button'].toolTip == 'Grid', 'the button has the tooltip "Grid"')
 
-local menuItems = harness.layouts['mainButtonsLayout'].items
-check(menuItems[#menuItems] == 'gridOverlay.button', 'the button is part of the main button layout')
+local menuItems = harness.bulldozerGroup()
+check(menuItems[#menuItems] == 'gridOverlay.button', 'the button is added to the group of the bulldozer')
 
 local cells = 0
 for id in pairs(harness.components) do
@@ -252,13 +252,13 @@ local sent = harness.events[#harness.events]
 check(sent ~= nil and sent.param.cellSize == 200, 'the settings are handed to the context that writes the savegame')
 
 script = start({})
-script.load({ version = 1, enabled = true, cellSize = 50, opacity = 0.75, lineWidth = 5.0, majorEvery = 10, radius = 400, palette = 'green' }, false)
+script.load({ version = 2, enabled = true, cellSize = 50, opacity = 0.75, lineWidth = 5.0, majorEvery = 10, radius = 400, palette = 'green' }, false)
 frames(script, 6)
 check(harness.countZones() == 2 * 17, 'a loaded state is used right away')
 check(harness.zones['gridOverlay.v0'].drawColor[2] == 0.85, 'a loaded colour is used')
 
 script = start({})
-script.load({ version = 1, enabled = true, cellSize = 'nonsense', palette = 'pink' }, false)
+script.load({ version = 2, enabled = true, cellSize = 'nonsense', palette = 'pink' }, false)
 frames(script, 6)
 check(harness.countZones() == 34, 'a broken state falls back to the defaults')
 
@@ -272,19 +272,16 @@ check(harness.countZones() == 34, 'the grid is drawn')
 
 -- the game rebuilds its whole user interface for the loaded game and drops
 -- everything a mod added to it
-harness.components = {}
-harness.layouts = { mainButtonsLayout = { id = 'mainButtonsLayout', items = {}, owner = 'mainButtonsLayout' } }
-harness.components['mainButtonsLayout'] = { id = 'mainButtonsLayout', type = 'Component', classes = {} }
-harness.windows = {}
+rebuildUserInterface()
 harness.zones = {}
 
 local loaded = harness.loadGameScript()
-loaded.load({ version = 1, enabled = true, cellSize = 100, opacity = 0.55, lineWidth = 3.0, majorEvery = 5, radius = 800, palette = 'blue' }, false)
+loaded.load({ version = 2, enabled = true, cellSize = 100, opacity = 0.55, lineWidth = 3.0, majorEvery = 5, radius = 800, palette = 'blue' }, false)
 loaded.guiInit()
 frames(loaded, 6)
 
 check(harness.components['gridOverlay.button'] ~= nil, 'the button is created again')
-check(harness.layouts['mainButtonsLayout'].items[1] == 'gridOverlay.button', 'the button is attached again')
+check(harness.bulldozerGroup()[1] == 'gridOverlay.button', 'the button is attached again')
 check(harness.countZones() == 34, 'the grid of the loaded game is drawn')
 
 harness.click(loaded, 'gridOverlay.button')
@@ -374,7 +371,7 @@ harness.leaveGuiContext()
 
 local simulation = harness.loadGameScript()
 
-local ok, err = pcall(simulation.load, { version = 1, enabled = true, cellSize = 200 }, false)
+local ok, err = pcall(simulation.load, { version = 2, enabled = true, cellSize = 200 }, false)
 check(ok, 'loading a savegame does not throw: ' .. tostring(err))
 
 ok, err = pcall(simulation.load, nil, false)
@@ -427,6 +424,74 @@ game.interface.setZone = function () error('not supported') end
 harness.click(script, 'gridOverlay.button')
 frames(script, 12)
 check(true, 'the update loop does not throw')
+
+------------------------------------------------------------------------------
+section('the button lines up with the buttons of other mods')
+
+local function startWith(prepare)
+  harness.reset()
+  harness.freshSession()
+  harness.setCameraAvailable(true)
+  harness.loadMod({})
+
+  prepare()
+
+  local prepared = harness.loadGameScript()
+  prepared.load(nil, false)
+  prepared.guiInit()
+
+  return prepared
+end
+
+-- a mod that was loaded earlier has already put its button into the group of
+-- the bulldozer; the button of this mod is appended after it instead of taking
+-- a place of its own, which is what makes the row work with any number of mods
+script = startWith(function ()
+  harness.components['otherMod.button'] = { id = 'otherMod.button', type = 'Button', classes = {} }
+  harness.gameGui.boxLayout_addItem('mainButtons.group2.layout', 'otherMod.button')
+end)
+
+local group = harness.bulldozerGroup()
+check(#group == 2, 'the button of the other mod stays where it is')
+check(group[1] == 'otherMod.button' and group[2] == 'gridOverlay.button',
+  'the button is appended behind it rather than placed at a fixed position')
+
+------------------------------------------------------------------------------
+section('the button still finds a place in a game menu the mod does not know')
+
+script = startWith(function ()
+  -- a game menu without the group the bulldozer is in
+  harness.components['mainButtonsLayout'] = nil
+  harness.layouts['mainButtonsLayout'] = nil
+
+  harness.components['mainMenuLeftLayout'] = { id = 'mainMenuLeftLayout', type = 'Component', classes = {} }
+  harness.layouts['mainMenuLeftLayout'] = { id = 'mainMenuLeftLayout', items = {}, owner = 'mainMenuLeftLayout' }
+end)
+
+check(harness.components['gridOverlay.button'] ~= nil, 'the button is created')
+check(harness.layouts['mainMenuLeftLayout'].items[1] == 'gridOverlay.button',
+  'the button falls back to a layout it can reach')
+
+------------------------------------------------------------------------------
+section('the mod does not add its button over and over again')
+
+local creations = 0
+local buttonCreate = harness.gameGui.button_create
+
+-- a game that accepts a button but does not hand it back would make the mod
+-- believe that its button is gone in every single frame
+script = startWith(function ()
+  harness.gameGui.button_create = function () creations = creations + 1 end
+end)
+
+frames(script, 300)
+local afterAWhile = creations
+frames(script, 300)
+harness.gameGui.button_create = buttonCreate
+
+check(harness.components['gridOverlay.button'] == nil, 'the button really is not there')
+check(creations == afterAWhile, 'the mod gives up instead of creating a button in every frame')
+check(afterAWhile <= 25, 'it gives up after a few attempts, not after hundreds')
 
 ------------------------------------------------------------------------------
 print('')

@@ -18,7 +18,7 @@ local zones = require 'grid_overlay/zones'
 
 -- version of the persisted settings; it is independent of the version of the
 -- mod and only has to be increased when their structure changes
-local STATE_VERSION = 1
+local STATE_VERSION = 2
 
 local SETTINGS_EVENT_ID = 'gridOverlay.settings'
 

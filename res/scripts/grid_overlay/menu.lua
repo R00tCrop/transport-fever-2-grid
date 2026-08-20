@@ -22,9 +22,20 @@ local OPTION_PREFIX = 'gridOverlay.option.'
 local FALLBACK_WINDOW_SIZE = { 300, 280 }
 local WINDOW_MARGIN = 6
 
--- the layouts the button is added to, in the order they are tried; the first
--- one is the layout that holds the main buttons of the game menu
-local TOOLBAR_LAYOUTS = { 'mainButtonsLayout', 'mainMenuLeftLayout', 'mainMenuRightLayout' }
+-- the main buttons of the game menu are grouped, and the group with the index
+-- below is the one that ends with the bulldozer
+--
+-- this is where the buttons of mods belong: they are appended to that group
+-- instead of being placed at a fixed position or hung next to a particular
+-- button of the game, which is why every mod that does it this way lines up
+-- with the others, no matter how many of them are installed and in which order
+-- they are loaded
+local MAIN_BUTTONS_LAYOUT = 'mainButtonsLayout'
+local BULLDOZER_GROUP = 2
+
+-- the layouts the button is added to if the group above cannot be reached, in
+-- the order they are tried
+local TOOLBAR_LAYOUTS = { 'mainMenuLeftLayout', 'mainMenuRightLayout' }
 
 -- the groups of the popup; every group maps to one setting and offers the
 -- values that can be picked for it
@@ -34,14 +45,14 @@ local groups = {
     setting = 'cellSize',
     values = config.CELL_SIZES,
     label = function () return _('Cell size (m)') end,
-    labels = { '25', '50', '100', '200', '300', '500' },
+    labels = { '50', '100', '200', '400', '800' },
   },
   {
     key = 'opacity',
     setting = 'opacity',
     values = config.OPACITIES,
     label = function () return _('Opacity') end,
-    labels = { '25%', '40%', '55%', '75%', '100%' },
+    labels = { '25%', '50%', '75%', '100%' },
   },
   {
     key = 'width',
@@ -62,7 +73,7 @@ local groups = {
     setting = 'radius',
     values = config.RADII,
     label = function () return _('Covered radius (m)') end,
-    labels = { '400', '800', '1200', '2000' },
+    labels = { '1000', '2000', '4000' },
   },
   {
     key = 'palette',
@@ -84,6 +95,8 @@ local state = {
   onToggle = nil,
   isAttached = false,
   attachAttempts = 0,
+  createAttempts = 0,
+  isBroken = false,
 }
 
 -- a game script runs in two contexts and only one of them owns the user
@@ -153,7 +166,18 @@ end
 -- official place for mod buttons, so the known layouts are tried one after the
 -- other
 local function attachButton(button)
-  local attempts = {}
+  -- the place the mods of the game use, and the place the button belongs: at
+  -- the end of the group of main buttons that holds the bulldozer
+  local attempts = {
+    {
+      name = 'next to the bulldozer',
+      run = function ()
+        api.gui.util.getById(MAIN_BUTTONS_LAYOUT)
+          :getItem(BULLDOZER_GROUP)
+          :addItem(api.gui.util.getById(BUTTON_ID))
+      end,
+    },
+  }
 
   -- the layouts that hold the buttons of the game menu can be addressed
   -- directly by their id
@@ -206,16 +230,33 @@ function menu.create(callbacks)
   state.onToggle = callbacks.onToggle
   state.onChange = callbacks.onChange
 
-  if not hasGui() then return end
+  if not hasGui() or state.isBroken then return end
 
   if not menu.exists() then
     -- a popup that belonged to a button that no longer exists is gone as well
     state.window = nil
     state.isAttached = false
     state.attachAttempts = 0
+    state.createAttempts = state.createAttempts + 1
 
-    local button = gui.button_create(BUTTON_ID, createIcon())
-    button:setToolTip(_('Grid'))
+    local ok, err = pcall(function ()
+      local button = gui.button_create(BUTTON_ID, createIcon())
+      button:setToolTip(_('Grid'))
+    end)
+
+    -- the mod recognises a user interface that the game has rebuilt by its
+    -- button being gone, so a game that does not hand a freshly created button
+    -- back would make it create one in every frame for the rest of the session
+    if not menu.exists() then
+      if state.createAttempts >= MAX_ATTACH_ATTEMPTS then
+        state.isBroken = true
+        log.error('the button could not be created: ' .. tostring(ok and 'the game did not return it' or err))
+      end
+
+      return
+    end
+
+    state.createAttempts = 0
   end
 
   if state.isAttached or state.attachAttempts >= MAX_ATTACH_ATTEMPTS then return end
@@ -264,7 +305,7 @@ local function createGroup(group, layout)
 
   for index = 1, #group.values do
     local id = optionId(group.key, index)
-    local text = gui.textView_create(id .. '.text', labels[index] or tostring(group.values[index]))
+    local text = gui.textView_create(id .. '.text', (labels and labels[index]) or tostring(group.values[index]))
 
     rowLayout:addItem(gui.button_create(id, text))
   end

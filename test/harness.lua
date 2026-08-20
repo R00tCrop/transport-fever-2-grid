@@ -67,9 +67,44 @@ local componentMetatable = { __index = {
       end,
     }
   end,
+  -- the layouts of the game menu can be walked: an item of a layout is a
+  -- component that carries a layout of its own, and the index is zero based
+  getItem = function (self, index)
+    local layout = harness.layouts[self.id]
+    local childId = layout and layout.items[index + 1]
+
+    if childId == nil then
+      error('there is no item ' .. tostring(index) .. ' in ' .. tostring(self.id))
+    end
+
+    return setmetatable({ id = childId }, getmetatable(self))
+  end,
+  addItem = function (self, child)
+    self:getLayout():addItem(child)
+  end,
   setFocusable = function () end,
   setMovable = function () end,
 } }
+
+-- the main buttons of the game menu are grouped; the group with the index 2 is
+-- the one that ends with the bulldozer and that mods add their buttons to
+function harness.createGameMenu()
+  harness.components['mainButtonsLayout'] = { id = 'mainButtonsLayout', type = 'Component', classes = {} }
+  harness.layouts['mainButtonsLayout'] = { id = 'mainButtonsLayout', items = {}, owner = 'mainButtonsLayout' }
+
+  for index = 0, 2 do
+    local id = 'mainButtons.group' .. index
+
+    harness.components[id] = { id = id, type = 'Component', classes = {}, layout = id .. '.layout' }
+    harness.layouts[id .. '.layout'] = { id = id .. '.layout', items = {}, owner = id }
+    harness.layouts['mainButtonsLayout'].items[index + 1] = id
+  end
+end
+
+-- the group of the bulldozer, which is where the button of the mod belongs
+function harness.bulldozerGroup()
+  return harness.layouts['mainButtons.group2.layout'].items
+end
 
 harness.gameGui = {
   component_create = function (id, name)
@@ -151,10 +186,8 @@ function harness.reset()
   harness.camera = { 0, 0 }
   harness.stats = { setZone = 0, removeZone = 0, getEntity = 0 }
 
-  -- the layouts of the game menu the mod adds its button to
-  harness.layouts['mainButtonsLayout'] = { id = 'mainButtonsLayout', items = {} }
-  harness.components['mainButtonsLayout'] = { id = 'mainButtonsLayout', type = 'Component', classes = {} }
-  harness.layouts['mainButtonsLayout'].owner = 'mainButtonsLayout'
+  -- the part of the game menu the mod adds its button to
+  harness.createGameMenu()
 
   _G.game = {
     config = {},

@@ -2,11 +2,11 @@
 -- game passes the selected option as a zero based index, therefore all lookups
 -- add one (the labels are created inside data() since the translation function
 -- is only available while the mod is being loaded)
-local CELL_SIZE_VALUES = { 25, 50, 100, 200, 300, 500 }
-local OPACITY_VALUES = { 0.25, 0.40, 0.55, 0.75, 1.00 }
-local LINE_WIDTH_VALUES = { 1.5, 3.0, 5.0 }
+local CELL_SIZE_VALUES = { 50, 100, 200, 400, 800 }
+local OPACITY_VALUES = { 0.25, 0.50, 0.75, 1.00 }
+local LINE_WIDTH_VALUES = { 3.0, 2.0, 1.0 }
 local MAJOR_EVERY_VALUES = { 0, 5, 10 }
-local RADIUS_VALUES = { 400, 800, 1200, 2000 }
+local RADIUS_VALUES = { 1000, 2000, 4000 }
 local PALETTE_VALUES = { 'blue', 'white', 'amber', 'green' }
 local LOG_LEVEL_VALUES = { 'OFF', 'ERROR', 'DEBUG' }
 
@@ -19,13 +19,13 @@ local function optionValue(values, index, defaultIndex)
 end
 
 function data()
-  local minorVersion = 1
+  local minorVersion = 2
 
-  local CELL_SIZE_LABELS = { _('25 m'), _('50 m'), _('100 m'), _('200 m'), _('300 m'), _('500 m') }
-  local OPACITY_LABELS = { _('25%'), _('40%'), _('55%'), _('75%'), _('100%') }
+  local CELL_SIZE_LABELS = { _('50 m'), _('100 m'), _('200 m'), _('400 m'), _('500 m') }
+  local OPACITY_LABELS = { _('25%'), _('50%'), _('75%'), _('100%') }
   local LINE_WIDTH_LABELS = { _('Thin'), _('Normal'), _('Bold') }
   local MAJOR_EVERY_LABELS = { _('Off'), _('Every 5 lines'), _('Every 10 lines') }
-  local RADIUS_LABELS = { _('400 m'), _('800 m'), _('1200 m'), _('2000 m') }
+  local RADIUS_LABELS = { _('1000 m'), _('2000 m'), _('4000 m') }
   local PALETTE_LABELS = { _('Blue'), _('White'), _('Amber'), _('Green') }
   local LOG_LEVEL_LABELS = { _('Off'), _('Errors'), _('Debug') }
 
@@ -50,15 +50,7 @@ function data()
           tooltip = _('Size of a grid cell when a game is started; it can be changed at any time with the grid button in the game menu'),
           values = CELL_SIZE_LABELS,
           uiType = 'COMBOBOX',
-          defaultIndex = 2,
-        },
-        {
-          key = 'gridPalette',
-          name = _('Colour'),
-          tooltip = _('Colour of the grid lines'),
-          values = PALETTE_LABELS,
-          uiType = 'COMBOBOX',
-          defaultIndex = 0,
+          defaultIndex = 1,
         },
         {
           key = 'gridOpacity',
@@ -74,7 +66,7 @@ function data()
           tooltip = _('Width of the grid lines; wider lines stay calm when the camera is zoomed out far, thinner ones can start to shimmer'),
           values = LINE_WIDTH_LABELS,
           uiType = 'SLIDER',
-          defaultIndex = 1,
+          defaultIndex = 0,
         },
         {
           key = 'gridMajorEvery',
@@ -91,6 +83,14 @@ function data()
           values = RADIUS_LABELS,
           uiType = 'COMBOBOX',
           defaultIndex = 1,
+        },
+        {
+          key = 'gridPalette',
+          name = _('Colour'),
+          tooltip = _('Colour of the grid lines'),
+          values = PALETTE_LABELS,
+          uiType = 'COMBOBOX',
+          defaultIndex = 0,
         },
         {
           key = 'gridLogLevel',

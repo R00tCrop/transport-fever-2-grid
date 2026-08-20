@@ -5,17 +5,19 @@ local config = {}
 
 -- the cell sizes that can be picked in the popup; the sizes a town is planned
 -- with are multiples of 100 m, the two smaller ones are there for detail work
-config.CELL_SIZES = { 25, 50, 100, 200, 300, 500 }
+config.CELL_SIZES = { 50, 100, 200, 400, 800 }
 
 -- how strongly the grid is drawn on top of the terrain
-config.OPACITIES = { 0.25, 0.40, 0.55, 0.75, 1.00 }
+config.OPACITIES = { 0.25, 0.50, 0.75, 1.00 }
 
 -- width of a minor line in meters; the grid is drawn as flat geometry on the
 -- ground, so the width has to be given in world units instead of pixels
 --
 -- a line that becomes thinner than a pixel on screen starts to shimmer, which
 -- is why even the thinnest one is well above a meter
-config.LINE_WIDTHS = { 1.5, 3.0, 5.0 }
+--
+-- narrow polygon: edges merge into a crisp bold line; wide: edges apart, looks thin
+config.LINE_WIDTHS = { 3.0, 2.0, 1.0 }
 
 -- every n-th line is emphasised; zero disables the emphasis completely
 config.MAJOR_EVERY = { 0, 5, 10 }
@@ -23,7 +25,7 @@ config.MAJOR_EVERY = { 0, 5, 10 }
 -- the radius in meters the grid covers around the point it follows; the covered
 -- area does not depend on the cell size, so changing the cell size only changes
 -- how fine the grid is
-config.RADII = { 400, 800, 1200, 2000 }
+config.RADII = { 1000, 2000, 4000 }
 
 -- the palettes use the accent colors of the game so that the grid never looks
 -- like a foreign element on the map
@@ -58,10 +60,10 @@ config.LOG_LEVELS = { 'OFF', 'ERROR', 'DEBUG' }
 local BUILT_IN_DEFAULTS = {
   enabled = false,
   cellSize = 100,
-  opacity = 0.55,
+  opacity = 0.75,
   lineWidth = 3.0,
   majorEvery = 5,
-  radius = 800,
+  radius = 2000,
   palette = 'blue',
   logLevel = 'ERROR',
 }
