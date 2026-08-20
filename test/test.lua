@@ -288,7 +288,7 @@ check(harness.zones['gridOverlay.v0'].drawColor[2] == 0.85, 'a loaded colour is 
 -- a state written by a version of the mod that offered other values; every one
 -- of them falls back to the default of this version instead of being used
 script = start({})
-script.load({ version = 1, enabled = true, cellSize = 25, opacity = 0.55, lineWidth = 5.0, radius = 800, palette = 'pink' }, false)
+script.load({ version = 2, enabled = true, cellSize = 25, opacity = 0.55, lineWidth = 5.0, radius = 800, palette = 'pink' }, false)
 frames(script, 6)
 check(harness.countZones() == DEFAULT_ZONES, 'values an older version offered fall back to the defaults')
 
