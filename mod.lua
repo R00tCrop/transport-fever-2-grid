@@ -47,7 +47,7 @@ function data()
         {
           key = 'gridCellSize',
           name = _('Cell size'),
-          tooltip = _('Size of a grid cell when a game is started; it can be changed at any time with the grid button in the game menu'),
+          tooltip = _('Size of a grid cell when a game is started; it can be changed at any time with the grid button at the bottom of the screen'),
           values = CELL_SIZE_LABELS,
           uiType = 'COMBOBOX',
           defaultIndex = 1,

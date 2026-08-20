@@ -2,13 +2,13 @@ function data()
   return {
     en = {
       Name = 'Grid',
-      Description = 'Adds a grid button to the main game menu that draws a measuring grid onto the terrain.\n'
+      Description = 'Adds a "Grid" button to the bar at the bottom of the game that draws a measuring grid onto the terrain.\n'
                  .. '\n'
                  .. 'The grid makes it much easier to plan a town, to keep buildings and streets aligned and to '
                  .. 'estimate distances without having to place a street first. Every n-th line is drawn wider and '
                  .. 'brighter so that cells can be counted at a glance.\n'
                  .. '\n'
-                 .. 'Clicking the grid button switches the grid on and off and opens a small popup in which the cell '
+                 .. 'Clicking the button switches the grid on and off and opens a small popup in which the cell '
                  .. 'size, the colour, the opacity, the line width, the emphasised lines and the covered area can be '
                  .. 'changed at any time. All settings are stored in the savegame.\n'
                  .. '\n'

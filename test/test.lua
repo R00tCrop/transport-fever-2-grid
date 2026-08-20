@@ -94,7 +94,7 @@ local function rebuildUserInterface()
   harness.components = {}
   harness.layouts = {}
   harness.windows = {}
-  harness.createGameMenu()
+  harness.createGameBar()
 end
 
 ------------------------------------------------------------------------------
@@ -113,21 +113,23 @@ check(game.config.gridOverlay.defaults.palette == 'amber', 'a chosen colour is p
 check(game.config.gridOverlay.defaults.opacity == 1.0, 'a chosen opacity is picked up')
 
 ------------------------------------------------------------------------------
-section('the button is added to the game menu')
+section('the button is added to the bar of the game')
 
 local script = start({})
 
 check(harness.components['gridOverlay.button'] ~= nil, 'the button exists')
-check(harness.components['gridOverlay.button'].toolTip == 'Grid', 'the button has the tooltip "Grid"')
+check(harness.components['gridOverlay.button.label'].text == 'Grid', 'the button is the word "Grid"')
+check(harness.components['gridOverlay.button'].toolTip ~= nil, 'the button explains itself in a tooltip')
 
-local menuItems = harness.bulldozerGroup()
-check(menuItems[#menuItems] == 'gridOverlay.button', 'the button is added to the group of the bulldozer')
-
-local cells = 0
-for id in pairs(harness.components) do
-  if harness.components[id].type == 'GridIconCell' then cells = cells + 1 end
-end
-check(cells == 9, 'the icon is drawn from nine cells instead of an image file')
+-- the bar the mod sees here is the one of a game without a single other mod: it
+-- holds exactly what the game itself puts there
+local barItems = harness.gameBar()
+check(barItems[#barItems] == 'gridOverlay.button', 'the button is added behind the numbers of the game')
+check(barItems[#barItems - 1] == 'gridOverlay.separator'
+  and harness.components['gridOverlay.separator'].type == 'VerticalLine',
+  'a divider of the game stands between the button and the numbers')
+check(#barItems == #harness.VANILLA_BAR + 2,
+  'the mod adds its divider and its button and nothing else')
 
 check(harness.countZones() == 0, 'nothing is drawn while the grid is switched off')
 
@@ -281,7 +283,7 @@ loaded.guiInit()
 frames(loaded, 6)
 
 check(harness.components['gridOverlay.button'] ~= nil, 'the button is created again')
-check(harness.bulldozerGroup()[1] == 'gridOverlay.button', 'the button is attached again')
+check(harness.gameBar()[#harness.gameBar()] == 'gridOverlay.button', 'the button is attached again')
 check(harness.countZones() == 34, 'the grid of the loaded game is drawn')
 
 harness.click(loaded, 'gridOverlay.button')
@@ -443,34 +445,32 @@ local function startWith(prepare)
   return prepared
 end
 
--- a mod that was loaded earlier has already put its button into the group of
--- the bulldozer; the button of this mod is appended after it instead of taking
--- a place of its own, which is what makes the row work with any number of mods
+-- a mod that was loaded earlier has already put its button into the bar; the
+-- button of this mod is appended after it instead of taking a place of its own,
+-- which is what makes the row work with any number of mods
 script = startWith(function ()
   harness.components['otherMod.button'] = { id = 'otherMod.button', type = 'Button', classes = {} }
-  harness.gameGui.boxLayout_addItem('mainButtons.group2.layout', 'otherMod.button')
+  harness.gameGui.boxLayout_addItem('gameInfo.layout', 'otherMod.button')
 end)
 
-local group = harness.bulldozerGroup()
-check(#group == 2, 'the button of the other mod stays where it is')
-check(group[1] == 'otherMod.button' and group[2] == 'gridOverlay.button',
+local bar = harness.gameBar()
+check(#bar == #harness.VANILLA_BAR + 3, 'the mod still adds no more than its divider and its button')
+check(bar[#bar - 2] == 'otherMod.button', 'the button of the other mod stays where it is')
+check(bar[#bar - 1] == 'gridOverlay.separator' and bar[#bar] == 'gridOverlay.button',
   'the button is appended behind it rather than placed at a fixed position')
 
 ------------------------------------------------------------------------------
-section('the button still finds a place in a game menu the mod does not know')
+section('the mod copes with a game that has no bar to add the button to')
 
 script = startWith(function ()
-  -- a game menu without the group the bulldozer is in
-  harness.components['mainButtonsLayout'] = nil
-  harness.layouts['mainButtonsLayout'] = nil
-
-  harness.components['mainMenuLeftLayout'] = { id = 'mainMenuLeftLayout', type = 'Component', classes = {} }
-  harness.layouts['mainMenuLeftLayout'] = { id = 'mainMenuLeftLayout', items = {}, owner = 'mainMenuLeftLayout' }
+  harness.components['gameInfo'] = nil
+  harness.layouts['gameInfo.layout'] = nil
 end)
 
-check(harness.components['gridOverlay.button'] ~= nil, 'the button is created')
-check(harness.layouts['mainMenuLeftLayout'].items[1] == 'gridOverlay.button',
-  'the button falls back to a layout it can reach')
+frames(script, 300)
+
+check(harness.components['gridOverlay.button'] ~= nil, 'the button is still created')
+check(true, 'the update loop does not throw')
 
 ------------------------------------------------------------------------------
 section('the mod does not add its button over and over again')

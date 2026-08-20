@@ -2,8 +2,8 @@
 
 The mod "Grid" for the game "Transport Fever 2".
 
-The mod adds a grid button to the main game menu. The button switches a measuring grid on and off
-and opens a popup in which the grid can be configured while playing. The grid is drawn directly
+The mod adds a "Grid" button to the bar at the bottom of the game. The button switches a measuring
+grid on and off and opens a popup in which the grid can be configured while playing. The grid is drawn directly
 onto the terrain, which makes it much easier to plan a town, to keep streets and buildings aligned
 and to estimate distances without having to place something first.
 
@@ -15,7 +15,7 @@ and to estimate distances without having to place something first.
 | `strings.lua` | translations of the mod name and description |
 | `res/config/game_script/grid_overlay.lua` | the game script: settings, save/load and the update loop |
 | `res/config/style_sheet/grid_overlay.lua` | styles of the button and of the popup |
-| `res/scripts/grid_overlay/menu.lua` | the button in the game menu and the settings popup |
+| `res/scripts/grid_overlay/menu.lua` | the button in the bar of the game and the settings popup |
 | `res/scripts/grid_overlay/geometry.lua` | the polygons of the grid lines |
 | `res/scripts/grid_overlay/anchor.lua` | the point on the map the grid is centred on |
 | `res/scripts/grid_overlay/zones.lua` | drawing of flat geometry onto the terrain |
@@ -41,26 +41,31 @@ itself is not perfectly stable (it comes from the camera, or from the last posit
 if the game does not let a script read the camera), and a grid that reacts to every small change of
 it flickers. With the hysteresis the grid stays where it is until it really has to move.
 
-## The button in the game menu
+## The button
 
-The button is appended to the group of main buttons that ends with the bulldozer, which is where the
-buttons of mods belong:
+The button is plain text that reads `Grid`. It is appended to the bar at the bottom of the game, the
+one that shows the earnings and the number of transported passengers and goods, behind a divider of
+the kind the bar already uses between its own numbers:
 
 ```lua
-api.gui.util.getById('mainButtonsLayout'):getItem(2):addItem(button)
+local bar = gui.boxLayout_get('gameInfo.layout')
+
+bar:addItem(gui.component_create('gridOverlay.separator', 'VerticalLine'))
+bar:addItem(gui.component_get('gridOverlay.button'))
 ```
 
 Nothing about this is a fixed position. The button is not placed at coordinates and it is not hung
-next to a particular button of the game — it is simply appended to a box layout, which lays its
+next to a particular element of the game — it is simply appended to a box layout, which lays its
 items out one after the other. Several mods that do this therefore line up next to each other in the
 order they happen to be loaded, and none of them has to know how many others are installed. It is
-the same three lines the other mods of the game use, so the row stays correct in either direction.
+the same few lines the other script mods use, which is why the row stays correct in either
+direction.
 
-The button carries the disk of the game behind it (the same images and colours the game uses for
-`BulldozerButton` and `ConstructionMenuIndicator`) and the icon is as large as the icons of its
-neighbours, so it cannot be told apart from the buttons the game adds itself. While the grid is
-drawn, the surface of the disk is coloured with the accent colour, which is how the game marks a
-button that is switched on.
+Everything about the look comes from the game: the label is an ordinary `TextView` inside an
+ordinary `Button`, so it carries the font, the hover highlight, the click highlight and the sounds
+of the rest of the bar. The only thing the mod adds is a little room to the left and to the right of
+the word, so the highlight does not stick to the letters. While the grid is drawn the label is
+painted in the accent colour of the game, which is how the game marks something that is switched on.
 
 ## The two contexts
 
@@ -81,7 +86,7 @@ has come back.
 The grid is therefore only ever thrown away for a reason the mod can see, and it is never
 recovered by clearing: writing a zone that is already there with the very same value cannot be
 seen, while removing it and adding it again can. Should the game ever drop what the mod drew (it
-does that when a savegame is loaded, which also rebuilds the game menu and is how the mod notices),
+does that when a savegame is loaded, which also rebuilds the bar and is how the mod notices),
 every zone is simply written again. On top of that the mod rewrites all of its zones every few
 seconds as a safety net.
 
@@ -151,6 +156,11 @@ The tests cover the geometry of the grid, the button and the popup, every settin
 cycle including states written by older versions of the mod, the fallback that is used when the
 camera cannot be read, and the case in which the game rebuilds its user interface while the mod is
 running. The `test` directory is ignored by the game.
+
+The bar the tests build is the bar of a game without a single other mod: it holds exactly the items
+the game itself puts there. The button is checked against that bar, against a bar in which another
+mod has already placed a button of its own, and against a game that has no bar at all, which is what
+tells that the mod stands on its own no matter what else is installed.
 
 Both contexts of the game script are run side by side and the state is handed from one to the other
 in every frame, exactly as the game does it, since that is what tells whether the grid really stands

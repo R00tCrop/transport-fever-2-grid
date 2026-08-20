@@ -24,65 +24,19 @@ function data()
 
   local a = ssu.makeAdder(result)
 
-  -- the icon of the button is a three by three grid of small squares
-  a('GridIconCell', {
-    size = { 10, 10 },
-    minSize = { 10, 10 },
-    backgroundColor = ssu.makeColor(255, 255, 255, 145),
+  -- the button is plain text in the bar at the bottom of the game, exactly like
+  -- the buttons of the other mods that live there; the game paints the hover and
+  -- the click highlight behind it on its own, the label only asks for a little
+  -- room to the left and to the right so that the highlight does not stick to
+  -- the letters
+  a('#gridOverlay.button.label', {
+    padding = { 0, 6, 0, 6 },
   })
 
-  a('#gridOverlay.icon.layout', {
-    innerSpacing = { 0, 3 },
-    gravity = { .5, .5 },
-  })
-
-  a([[#gridOverlay.icon.row1.layout,
-    #gridOverlay.icon.row2.layout,
-    #gridOverlay.icon.row3.layout]], {
-    innerSpacing = { 3, 0 },
-  })
-
-  -- the button stands in the row of the main buttons of the game, so it has to
-  -- be as large as they are; it is the icon that decides that, which is also
-  -- how the buttons of the game and of the other mods are sized
-  a('GridIcon', {
-    size = { 50, 50 },
-    minSize = { 50, 50 },
-  })
-
-  -- the same disk the game draws behind the bulldozer and its other main
-  -- buttons; the values are the ones the game uses for BulldozerButton and
-  -- ConstructionMenuIndicator, and the images are the ones of the game rather
-  -- than copies, so the button cannot be told apart from its neighbours
-  a('#gridOverlay.button', {
-    backgroundImage1 = { fileName = 'ui/design/buttons/disk_big_behind.tga' },
-    backgroundImage2 = { fileName = 'ui/design/buttons/disk_big_surface.tga' },
-    borderImage = { fileName = 'ui/design/buttons/disk_big_contour.tga' },
-    backgroundColor1 = ssu.makeColor(15, 35, 50, 90),
-    backgroundColor2 = ssu.makeColor(15, 35, 50),
-    borderColor = ssu.makeColor(255, 255, 255, 128),
-  })
-
-  a('#gridOverlay.button:hover', {
-    backgroundColor1 = ssu.makeColor(183, 188, 193, 128),
-    borderColor = ssu.makeColor(255, 255, 255),
-  })
-
-  a('#gridOverlay.button:active', {
-    backgroundColor1 = ssu.makeColor(15, 35, 50, 90),
-    backgroundColor2 = ssu.makeColor(110, 122, 132),
-  })
-
-  -- the button lights up while the grid is drawn; the game marks a button that
-  -- is switched on by colouring the surface of its disk, so the mod does the
-  -- same instead of putting a rectangle behind a round button
-  a('#gridOverlay.button!ug-grid-on', {
-    backgroundColor2 = ssu.makeColor(accent[1], accent[2], accent[3]),
-    borderColor = ssu.makeColor(255, 255, 255, 200),
-  })
-
-  a('!ug-grid-on GridIconCell', {
-    backgroundColor = ssu.makeColor(255, 255, 255, 255),
+  -- the game marks what is currently switched on with its accent colour, which
+  -- for a text button is the label rather than a background
+  a('#gridOverlay.button.label!ug-grid-on', {
+    color = ssu.makeColor(accent[1], accent[2], accent[3]),
   })
 
   -- the popup uses the same width and the same frame as the windows of the

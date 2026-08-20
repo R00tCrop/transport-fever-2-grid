@@ -67,18 +67,6 @@ local componentMetatable = { __index = {
       end,
     }
   end,
-  -- the layouts of the game menu can be walked: an item of a layout is a
-  -- component that carries a layout of its own, and the index is zero based
-  getItem = function (self, index)
-    local layout = harness.layouts[self.id]
-    local childId = layout and layout.items[index + 1]
-
-    if childId == nil then
-      error('there is no item ' .. tostring(index) .. ' in ' .. tostring(self.id))
-    end
-
-    return setmetatable({ id = childId }, getmetatable(self))
-  end,
   addItem = function (self, child)
     self:getLayout():addItem(child)
   end,
@@ -86,24 +74,41 @@ local componentMetatable = { __index = {
   setMovable = function () end,
 } }
 
--- the main buttons of the game menu are grouped; the group with the index 2 is
--- the one that ends with the bulldozer and that mods add their buttons to
-function harness.createGameMenu()
-  harness.components['mainButtonsLayout'] = { id = 'mainButtonsLayout', type = 'Component', classes = {} }
-  harness.layouts['mainButtonsLayout'] = { id = 'mainButtonsLayout', items = {}, owner = 'mainButtonsLayout' }
+-- the bar at the bottom of the game that carries the earnings and the numbers of
+-- transported passengers and goods; it is where the text buttons of the mods go
+--
+-- these are the items the game itself puts into that bar (see the vanilla
+-- res/config/game_script/gameinfo.lua), so what the tests work with is the bar
+-- of a game that has not a single other mod installed
+harness.VANILLA_BAR = {
+  { 'gameInfo.earningsComp', 'EarningsComp' },
+  { 'gameInfo.verticalLine1', 'VerticalLine' },
+  { 'gameInfo.passengerComp', 'PassengerComp' },
+  { 'gameInfo.verticalLine2', 'VerticalLine' },
+  { 'gameInfo.cargoComp', 'CargoComp' },
+}
 
-  for index = 0, 2 do
-    local id = 'mainButtons.group' .. index
+function harness.createGameBar()
+  harness.components['gameInfo'] = {
+    id = 'gameInfo', type = 'Component', classes = {}, layout = 'gameInfo.layout',
+  }
+  harness.layouts['gameInfo.layout'] = {
+    id = 'gameInfo.layout', orientation = 'HORIZONTAL', items = {}, owner = 'gameInfo',
+  }
 
-    harness.components[id] = { id = id, type = 'Component', classes = {}, layout = id .. '.layout' }
-    harness.layouts[id .. '.layout'] = { id = id .. '.layout', items = {}, owner = id }
-    harness.layouts['mainButtonsLayout'].items[index + 1] = id
+  for i = 1, #harness.VANILLA_BAR do
+    local id, componentType = harness.VANILLA_BAR[i][1], harness.VANILLA_BAR[i][2]
+
+    harness.gameGui.component_create(id, componentType)
+    harness.gameGui.boxLayout_addItem('gameInfo.layout', id)
   end
 end
 
--- the group of the bulldozer, which is where the button of the mod belongs
-function harness.bulldozerGroup()
-  return harness.layouts['mainButtons.group2.layout'].items
+-- everything that stands in that bar, in the order it was added
+function harness.gameBar()
+  local layout = harness.layouts['gameInfo.layout']
+
+  return layout and layout.items or {}
 end
 
 harness.gameGui = {
@@ -186,8 +191,8 @@ function harness.reset()
   harness.camera = { 0, 0 }
   harness.stats = { setZone = 0, removeZone = 0, getEntity = 0 }
 
-  -- the part of the game menu the mod adds its button to
-  harness.createGameMenu()
+  -- the bar the mod adds its button to
+  harness.createGameBar()
 
   _G.game = {
     config = {},

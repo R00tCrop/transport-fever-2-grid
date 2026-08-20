@@ -1,5 +1,5 @@
--- everything the player can see and click: the button in the main game menu and
--- the popup that holds the settings of the grid
+-- everything the player can see and click: the button in the bar at the bottom
+-- of the game and the popup that holds the settings of the grid
 --
 -- the whole user interface is built with the same component types the game uses
 -- for its own menus, so it inherits the look, the sounds and the hover effects
@@ -12,7 +12,8 @@ local log = require 'grid_overlay/logging'
 local menu = {}
 
 local BUTTON_ID = 'gridOverlay.button'
-local ICON_ID = 'gridOverlay.icon'
+local LABEL_ID = 'gridOverlay.button.label'
+local SEPARATOR_ID = 'gridOverlay.separator'
 local WINDOW_ID = 'gridOverlay.window'
 local CONTENT_ID = 'gridOverlay.window.content'
 local OPTION_PREFIX = 'gridOverlay.option.'
@@ -22,20 +23,14 @@ local OPTION_PREFIX = 'gridOverlay.option.'
 local FALLBACK_WINDOW_SIZE = { 300, 280 }
 local WINDOW_MARGIN = 6
 
--- the main buttons of the game menu are grouped, and the group with the index
--- below is the one that ends with the bulldozer
+-- the bar at the bottom of the screen that carries the earnings and the number
+-- of transported passengers and goods
 --
--- this is where the buttons of mods belong: they are appended to that group
--- instead of being placed at a fixed position or hung next to a particular
--- button of the game, which is why every mod that does it this way lines up
--- with the others, no matter how many of them are installed and in which order
--- they are loaded
-local MAIN_BUTTONS_LAYOUT = 'mainButtonsLayout'
-local BULLDOZER_GROUP = 2
-
--- the layouts the button is added to if the group above cannot be reached, in
--- the order they are tried
-local TOOLBAR_LAYOUTS = { 'mainMenuLeftLayout', 'mainMenuRightLayout' }
+-- this is where the text buttons of mods belong: they are appended to that bar
+-- instead of being squeezed between the round main buttons of the game, which
+-- is why every mod that does it this way lines up with the others, no matter
+-- how many of them are installed and in which order they are loaded
+local GAME_INFO_LAYOUT = 'gameInfo.layout'
 
 -- the groups of the popup; every group maps to one setting and offers the
 -- values that can be picked for it
@@ -84,8 +79,8 @@ local groups = {
   },
 }
 
--- the game menu is not always ready when a mod starts, so adding the button is
--- retried a few times before the mod gives up
+-- the bar of the game is not always ready when a mod starts, so adding the
+-- button is retried a few times before the mod gives up
 local MAX_ATTACH_ATTEMPTS = 20
 
 local state = {
@@ -126,30 +121,6 @@ local function optionId(groupKey, index)
   return OPTION_PREFIX .. groupKey .. '.' .. index
 end
 
--- the icon is assembled from small squares instead of using an image file, so
--- the mod does not have to ship any assets and always matches the colours of the
--- user interface
-local function createIcon()
-  local rows = gui.boxLayout_create(ICON_ID .. '.layout', 'VERTICAL')
-
-  for row = 1, 3 do
-    local cells = gui.boxLayout_create(ICON_ID .. '.row' .. row .. '.layout', 'HORIZONTAL')
-
-    for column = 1, 3 do
-      cells:addItem(gui.component_create(ICON_ID .. '.cell' .. row .. column, 'GridIconCell'))
-    end
-
-    local rowComp = gui.component_create(ICON_ID .. '.row' .. row, 'GridIconRow')
-    rowComp:setLayout(cells)
-    rows:addItem(rowComp)
-  end
-
-  local icon = gui.component_create(ICON_ID, 'GridIcon')
-  icon:setLayout(rows)
-
-  return icon
-end
-
 -- true, false or nil if the game does not let the mod ask for the parent of a
 -- component
 local function isAttached()
@@ -162,69 +133,37 @@ local function isAttached()
   return parent ~= nil
 end
 
--- adds the button to the main menu of the game; the game does not offer an
--- official place for mod buttons, so the known layouts are tried one after the
--- other
-local function attachButton(button)
-  -- the place the mods of the game use, and the place the button belongs: at
-  -- the end of the group of main buttons that holds the bulldozer
-  local attempts = {
-    {
-      name = 'next to the bulldozer',
-      run = function ()
-        api.gui.util.getById(MAIN_BUTTONS_LAYOUT)
-          :getItem(BULLDOZER_GROUP)
-          :addItem(api.gui.util.getById(BUTTON_ID))
-      end,
-    },
-  }
+-- adds the button to the bar at the bottom of the game, behind a divider and
+-- behind whatever the mods that were loaded before have put there
+local function attachButton()
+  local ok = pcall(function ()
+    local bar = gui.boxLayout_get(GAME_INFO_LAYOUT)
 
-  -- the layouts that hold the buttons of the game menu can be addressed
-  -- directly by their id
-  for i = 1, #TOOLBAR_LAYOUTS do
-    local layoutId = TOOLBAR_LAYOUTS[i]
-
-    attempts[#attempts + 1] = {
-      name = layoutId,
-      run = function () gui.boxLayout_get(layoutId):addItem(button) end,
-    }
-  end
-
-  -- otherwise the button is placed next to one of the buttons the game always
-  -- has, which requires walking the component tree
-  local neighbours = { 'menu.layersButton', 'menu.statsButton' }
-
-  for i = 1, #neighbours do
-    local neighbourId = neighbours[i]
-
-    attempts[#attempts + 1] = {
-      name = 'next to ' .. neighbourId,
-      run = function ()
-        api.gui.util.getById(neighbourId):getParent():getLayout():addItem(api.gui.util.getById(BUTTON_ID))
-      end,
-    }
-  end
-
-  for i = 1, #attempts do
-    local attempt = attempts[i]
-
-    if pcall(attempt.run) and isAttached() ~= false then
-      log.debug('added the button to the game menu (' .. attempt.name .. ')')
-      return true
+    -- the divider is the one the bar already uses between its own numbers; it
+    -- is only ever added once, so a second attempt cannot end up with two of
+    -- them next to each other
+    if not exists(SEPARATOR_ID) then
+      bar:addItem(gui.component_create(SEPARATOR_ID, 'VerticalLine'))
     end
-  end
 
-  return false
+    bar:addItem(gui.component_get(BUTTON_ID))
+  end)
+
+  if not ok or isAttached() == false then return false end
+
+  log.debug('added the button to the game bar')
+
+  return true
 end
 
--- true once the button exists and is part of the game menu
+-- true once the button exists and is part of the bar
 function menu.isReady()
   return menu.exists() and state.isAttached
 end
 
 -- creates the button if it is not there (any more) and makes sure it is part of
--- the game menu; calling this again is cheap and is what brings the button back
--- after the game rebuilt its user interface
+-- the bar; calling this again is cheap and is what brings the button back after
+-- the game rebuilt its user interface
 function menu.create(callbacks)
   -- the callbacks always belong to the script instance that is running now
   state.onToggle = callbacks.onToggle
@@ -240,8 +179,8 @@ function menu.create(callbacks)
     state.createAttempts = state.createAttempts + 1
 
     local ok, err = pcall(function ()
-      local button = gui.button_create(BUTTON_ID, createIcon())
-      button:setToolTip(_('Grid'))
+      local button = gui.button_create(BUTTON_ID, gui.textView_create(LABEL_ID, _('Grid')))
+      button:setToolTip(_('Switch the grid on and off and change how it looks'))
     end)
 
     -- the mod recognises a user interface that the game has rebuilt by its
@@ -262,19 +201,20 @@ function menu.create(callbacks)
   if state.isAttached or state.attachAttempts >= MAX_ATTACH_ATTEMPTS then return end
 
   state.attachAttempts = state.attachAttempts + 1
-  state.isAttached = attachButton(gui.component_get(BUTTON_ID))
+  state.isAttached = attachButton()
 
   if not state.isAttached and state.attachAttempts >= MAX_ATTACH_ATTEMPTS then
-    log.error('the button could not be added to the game menu')
+    log.error('the button could not be added to the game bar')
   end
 end
 
--- the button shows whether the grid is currently drawn
+-- the label shows whether the grid is currently drawn: the game marks what is
+-- switched on with its accent colour
 function menu.setActive(isActive)
   if not menu.exists() then return end
 
   pcall(function ()
-    gui.component_get(BUTTON_ID):setStyleClassList(isActive and { 'ug-grid-on' } or {})
+    gui.component_get(LABEL_ID):setStyleClassList(isActive and { 'ug-grid-on' } or {})
   end)
 end
 
@@ -315,8 +255,8 @@ local function createGroup(group, layout)
   layout:addItem(row)
 end
 
--- places the popup right next to the button, above or below it depending on
--- where the game menu is
+-- places the popup right above the button, or below it if the button ever ends
+-- up in the upper half of the screen
 local function positionWindow()
   local buttonRect = { 0, 0, 0, 0 }
   local viewRect = { 0, 0, 1920, 1080 }

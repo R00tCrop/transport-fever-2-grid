@@ -49,9 +49,9 @@ local runtime = {
   updates = 0,
   lastFallbackFrame = -FALLBACK_INTERVAL,
 
-  -- whether the button was part of the game menu the last time it was checked;
-  -- it disappearing means that the game rebuilt its user interface, which is
-  -- also the moment everything the mod drew is gone
+  -- whether the button was part of the bar the last time it was checked; it
+  -- disappearing means that the game rebuilt its user interface, which is also
+  -- the moment everything the mod drew is gone
   menuReady = false,
 
   -- the settings the popup has just chosen: they are on screen already, but the
@@ -156,7 +156,7 @@ local function ensureMenu()
   })
 
   if not ok then
-    log.error('the game menu could not be extended: ' .. tostring(err))
+    log.error('the bar of the game could not be extended: ' .. tostring(err))
     return
   end
 
