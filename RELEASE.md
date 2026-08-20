@@ -82,8 +82,18 @@ without excluding anything.
 2. Main menu, **Mods** (Staging area). The mod shows up with its picture and its name.
 3. Select it and choose **Upload to Steam Workshop**.
 4. For the first upload the game asks for the title, the description, the visibility and the tags.
-   Paste the text of `workshop_description.txt` into the description; it is written in the BBCode
-   that Steam expects.
+
+   **A Workshop item has one title and one description for the whole world.** Steam does not offer
+   a second language for them, so both have to be english. Steam translates the page around them
+   (the buttons, the headings, the dates) for every visitor on its own, which is why the page looks
+   russian here and english to someone else.
+
+   The game runs in the language Steam is set to, so an uploader started from a russian game offers
+   russian texts. Overwrite them: the title is `Grid` and the description is the text of
+   `workshop_description.txt`, which is written in the BBCode Steam expects.
+
+   The translations in `strings.lua` are a different thing and stay as they are. They are what the
+   game shows in its own mod list and on the button, not what Steam shows.
 5. Accept the Steam Workshop legal agreement if the game asks for it. Steam refuses the upload
    otherwise, and an item that was created but not accepted stays invisible.
 

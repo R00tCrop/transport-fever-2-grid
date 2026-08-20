@@ -55,7 +55,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing",
     },
     de = {
-      ["Name"] = "Raster",
+      ["Name"] = "Grid",
       ["Description"] = [[Zeichnet ein Messraster auf das Gelände und fügt der Leiste am unteren Bildschirmrand eine Schaltfläche "Raster" hinzu.
 
 Das Raster macht es viel einfacher, eine Stadt zu planen, Gebäude und Straßen auszurichten und Entfernungen abzuschätzen, ohne erst eine Straße bauen zu müssen. Jede n-te Linie wird breiter und heller gezeichnet, sodass sich Zellen auf einen Blick zählen lassen.
@@ -103,7 +103,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Fehler werden in das Spielprotokoll geschrieben; Debug zeigt zusätzlich eine Anzeige im Spiel, die verrät, was die Mod gerade tut",
     },
     es = {
-      ["Name"] = "Cuadrícula",
+      ["Name"] = "Grid",
       ["Description"] = [[Dibuja una cuadrícula de medición sobre el terreno y añade un botón "Cuadrícula" a la barra inferior del juego.
 
 La cuadrícula facilita mucho planificar una ciudad, alinear edificios y calles y estimar distancias sin tener que construir una calle primero. Cada n-ésima línea se dibuja más gruesa y brillante para poder contar las celdas de un vistazo.
@@ -151,7 +151,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Los errores se escriben en el registro del juego; depuración muestra además un panel en el juego que indica qué está haciendo el mod",
     },
     fr = {
-      ["Name"] = "Grille",
+      ["Name"] = "Grid",
       ["Description"] = [[Dessine une grille de mesure sur le terrain et ajoute un bouton « Grille » à la barre en bas de l’écran.
 
 La grille facilite grandement la planification d’une ville, l’alignement des bâtiments et des rues ainsi que l’estimation des distances sans avoir à poser une route au préalable. Une ligne sur n est dessinée plus épaisse et plus lumineuse afin de compter les cellules d’un coup d’œil.
@@ -199,7 +199,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Les erreurs sont écrites dans le journal du jeu ; le débogage affiche en plus un panneau en jeu indiquant ce que fait le mod",
     },
     it = {
-      ["Name"] = "Griglia",
+      ["Name"] = "Grid",
       ["Description"] = [[Disegna una griglia di misurazione sul terreno e aggiunge un pulsante "Griglia" alla barra in fondo allo schermo.
 
 La griglia rende molto più semplice pianificare una città, allineare edifici e strade e stimare le distanze senza dover prima costruire una strada. Ogni n-esima linea viene disegnata più spessa e più chiara, così le celle si contano a colpo d’occhio.
@@ -247,7 +247,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Gli errori vengono scritti nel log del gioco; il debug mostra inoltre un pannello in gioco che indica cosa sta facendo la mod",
     },
     ja = {
-      ["Name"] = "グリッド",
+      ["Name"] = "Grid",
       ["Description"] = [[地形の上に計測用のグリッドを描画し、画面下部のバーに「グリッド」ボタンを追加します。
 
 グリッドがあると、街の計画、建物や道路の位置合わせ、距離の見積もりが格段に楽になります。道路を仮に敷いてみる必要はありません。n本ごとに線を太く明るく描くため、セル数もひと目で数えられます。
@@ -295,7 +295,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "エラーはゲームのログに記録されます。デバッグではさらに、MODの動作を示すパネルをゲーム内に表示します",
     },
     ko = {
-      ["Name"] = "격자",
+      ["Name"] = "Grid",
       ["Description"] = [[지형 위에 측정용 격자를 그리고, 화면 아래쪽 바에 "격자" 버튼을 추가합니다.
 
 격자가 있으면 도시를 계획하고, 건물과 도로를 정렬하고, 도로를 먼저 놓아 보지 않고도 거리를 가늠하기가 훨씬 쉬워집니다. n번째 선마다 더 굵고 밝게 그려지므로 칸 수도 한눈에 셀 수 있습니다.
@@ -343,7 +343,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "오류는 게임 로그에 기록됩니다. 디버그를 선택하면 모드의 동작을 알려주는 패널이 게임 안에 추가로 표시됩니다",
     },
     nl = {
-      ["Name"] = "Raster",
+      ["Name"] = "Grid",
       ["Description"] = [[Tekent een meetraster op het terrein en voegt een knop "Raster" toe aan de balk onderaan het scherm.
 
 Het raster maakt het veel eenvoudiger om een stad te plannen, gebouwen en straten uit te lijnen en afstanden in te schatten zonder eerst een weg te moeten aanleggen. Elke n-de lijn wordt breder en helderder getekend, zodat cellen in één oogopslag te tellen zijn.
@@ -391,7 +391,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Fouten worden naar het spellogboek geschreven; debug toont daarnaast een paneel in het spel dat vertelt wat de mod doet",
     },
     pl = {
-      ["Name"] = "Siatka",
+      ["Name"] = "Grid",
       ["Description"] = [[Rysuje siatkę pomiarową na terenie i dodaje przycisk "Siatka" do paska na dole ekranu.
 
 Siatka znacznie ułatwia planowanie miasta, wyrównywanie budynków i ulic oraz szacowanie odległości bez konieczności stawiania najpierw drogi. Co n-ta linia jest rysowana grubiej i jaśniej, dzięki czemu komórki można policzyć jednym spojrzeniem.
@@ -439,7 +439,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Błędy są zapisywane w dzienniku gry; debugowanie dodatkowo pokazuje w grze panel informujący, co robi modyfikacja",
     },
     pt_BR = {
-      ["Name"] = "Grade",
+      ["Name"] = "Grid",
       ["Description"] = [[Desenha uma grade de medição sobre o terreno e adiciona um botão "Grade" à barra na parte inferior do jogo.
 
 A grade facilita muito planejar uma cidade, alinhar prédios e ruas e estimar distâncias sem precisar construir uma rua antes. A cada n-ésima linha o traço é mais grosso e mais claro, de modo que as células podem ser contadas num relance.
@@ -487,7 +487,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Os erros são gravados no log do jogo; a depuração mostra ainda um painel no jogo que informa o que o mod está fazendo",
     },
     ru = {
-      ["Name"] = "Сетка",
+      ["Name"] = "Grid",
       ["Description"] = [[Рисует измерительную сетку прямо на ландшафте и добавляет кнопку «Сетка» в нижнюю панель игры.
 
 С сеткой намного проще планировать город, выравнивать здания и улицы и прикидывать расстояния, не строя для этого пробную дорогу. Каждая n-я линия рисуется шире и ярче, поэтому ячейки легко пересчитать одним взглядом.
@@ -535,7 +535,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "Ошибки записываются в журнал игры; отладка дополнительно показывает в игре панель, которая сообщает, что делает мод",
     },
     zh_CN = {
-      ["Name"] = "网格",
+      ["Name"] = "Grid",
       ["Description"] = [[在地形上绘制测量网格，并在游戏底部的信息栏中添加一个"网格"按钮。
 
 有了网格，规划城镇、对齐建筑与道路、估算距离都会轻松许多，不必先修一条路来量距离。每隔 n 条线会绘制得更粗更亮，一眼就能数清格子。
@@ -583,7 +583,7 @@ Written with Claude Opus 5 by Anthropic.]],
       ["Errors are written to the game log; debug additionally shows a panel in game that tells what the mod is doing"] = "错误会写入游戏日志；调试模式还会在游戏中显示一个面板，说明模组正在做什么",
     },
     zh_TW = {
-      ["Name"] = "網格",
+      ["Name"] = "Grid",
       ["Description"] = [[在地形上繪製測量網格，並在遊戲底部的資訊列中加入一個「網格」按鈕。
 
 有了網格，規劃城鎮、對齊建築與道路、估算距離都會輕鬆許多，不必先蓋一條路來量距離。每隔 n 條線會繪製得更粗更亮，一眼就能數清格子。
